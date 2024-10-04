@@ -7,9 +7,9 @@ license = "Insert License Here"
 modId = "legacy_command_registry"
 version = "${version}"
 displayName = "Legacy Command Registry"
-authors = "Me!"
+authors = "HANANA"
 description = '''
-This is an example description! Tell everyone what your mod is about!
+Register Command in legacy method.
 '''
 #logoFile = ""
 

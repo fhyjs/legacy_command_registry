@@ -6,9 +6,9 @@
     "version": "${version}",
     "metadata": {
       "name": "Legacy Command Registry",
-      "description": "This is an example description! Tell everyone what your mod is about!",
+      "description": "Register Command in legacy method.",
       "contributors": {
-        "Me!": "Author"
+        "HANANA": "Author"
       },
       "icon": "assets/legacy_command_registry/icon.png"
     },

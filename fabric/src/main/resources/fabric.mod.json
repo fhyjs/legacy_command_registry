@@ -3,9 +3,9 @@
   "id": "legacy_command_registry",
   "version": "${version}",
   "name": "Legacy Command Registry",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "description": "Register Command in legacy method.",
   "authors": [
-    "Me!"
+    "HANANA"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
