@@ -1,22 +1,34 @@
 package org.eu.hanana.reimu.mc.lcr;
 
+import com.mojang.brigadier.LiteralMessage;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.ContextChain;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandResultCallback;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.ExecutionCommandSource;
+import net.minecraft.commands.execution.ChainModifiers;
 import net.minecraft.commands.execution.ExecutionContext;
+import net.minecraft.commands.execution.TraceCallbacks;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import org.eu.hanana.reimu.mc.lcr.command.CommandBase;
 import org.eu.hanana.reimu.mc.lcr.events.LegacyCommandRegistrationEvent;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static net.minecraft.commands.Commands.executeCommandInContext;
 
@@ -27,6 +39,7 @@ public class CommandManager {
     public CommandManager(){
         commandManager=this;
     }
+    @Nullable
     public static CommandManager getCommandManager() {
         return commandManager;
     }
@@ -54,15 +67,20 @@ public class CommandManager {
     public boolean hasCommand(String commandStr){
         for (CommandBase command : commands) {
             if (commandStr.startsWith(command.getCommand())){
-                return true;
+                if (commandStr.split(" ")[0].equals(command.getCommand())) {
+                    return true;
+                }
             }
         }
         return false;
     }
+    @Nullable
     public CommandBase getCommandByCommand(String commandStr){
         for (CommandBase command : commands) {
             if (commandStr.startsWith(command.getCommand())){
-                return command;
+                if (commandStr.split(" ")[0].equals(command.getCommand())){
+                    return command;
+                }
             }
         }
         return null;
@@ -76,15 +94,32 @@ public class CommandManager {
             try {
                 if (commandBase != null) {
                     executeCommandInContext(commandSourceStack, (executionContext) -> {
-                        commandBase.execute(commandSourceStack,command);
+                        if (!commandSourceStack.hasPermission(commandBase.getPermissionLevel())){
+                            commandSourceStack.sendFailure(Component.literal("No permission to execute command "+ command));
+                            return;
+                        }
+                        executionContext.profiler().push(() -> "execute " + command);
+                        try {
+                            executionContext.incrementCost();
+                            int i = commandBase.execute(commandSourceStack,command);;
+                            TraceCallbacks traceCallbacks = executionContext.tracer();
+                            if (traceCallbacks != null) {
+                                traceCallbacks.onReturn(1, command, i);
+                            }
+                        } catch (CommandSyntaxException commandSyntaxException) {
+                            commandSourceStack.handleError(commandSyntaxException,  ChainModifiers.DEFAULT.isForked(), executionContext.tracer());
+                        } catch (Exception e){
+                            commandSourceStack.handleError(new CommandSyntaxException(new SimpleCommandExceptionType(new LiteralMessage(e.toString())),new LiteralMessage(e.toString())),  ChainModifiers.DEFAULT.isForked(), executionContext.tracer());
+                        } finally {
+                            executionContext.profiler().pop();
+                        }
                     });
                 }
             } catch (Exception var12) {
-                Exception exception = var12;
-                MutableComponent mutableComponent = Component.literal(exception.getMessage() == null ? exception.getClass().getName() : exception.getMessage());
+                MutableComponent mutableComponent = Component.literal(var12.getMessage() == null ? var12.getClass().getName() : var12.getMessage());
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.error("Command exception: /{}", command, exception);
-                    StackTraceElement[] stackTraceElements = exception.getStackTrace();
+                    LOGGER.error("Command exception: /{}", command, var12);
+                    StackTraceElement[] stackTraceElements = var12.getStackTrace();
 
                     for(int i = 0; i < Math.min(stackTraceElements.length, 3); ++i) {
                         mutableComponent.append("\n\n").append(stackTraceElements[i].getMethodName()).append("\n ").append(stackTraceElements[i].getFileName()).append(":").append(String.valueOf(stackTraceElements[i].getLineNumber()));
@@ -95,8 +130,8 @@ public class CommandManager {
                     return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, mutableComponent));
                 }));
                 if (SharedConstants.IS_RUNNING_IN_IDE) {
-                    commandSourceStack.sendFailure(Component.literal(Util.describeError(exception)));
-                    LOGGER.error("'/{}' threw an exception", command, exception);
+                    commandSourceStack.sendFailure(Component.literal(Util.describeError(var12)));
+                    LOGGER.error("'/{}' threw an exception", command, var12);
                 }
             } finally {
                 commandSourceStack.getServer().getProfiler().pop();

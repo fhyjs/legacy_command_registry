@@ -10,6 +10,8 @@ import java.util.List;
 
 public class C2SGetSuggestionHandle {
     public static void receive(C2SGetSuggestionPayload payload, NetworkManager.PacketContext context) {
-        NetworkManager.sendToPlayer(((ServerPlayer) context.getPlayer()),new S2CPayloadSendSetCommandField(CommandManager.getCommandManager().getCommandByCommand(payload.string()).getSuggestion(payload.string(),context.getPlayer())));
+        var cmd = CommandManager.getCommandManager().getCommandByCommand(payload.string());
+        if (cmd!=null)
+            NetworkManager.sendToPlayer(((ServerPlayer) context.getPlayer()),new S2CPayloadSendSetCommandField(cmd.getSuggestion(payload.string(),context.getPlayer())));
     }
 }

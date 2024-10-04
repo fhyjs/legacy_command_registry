@@ -12,6 +12,7 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
+import org.eu.hanana.reimu.mc.lcr.commands.LCRProxyCommand;
 import org.eu.hanana.reimu.mc.lcr.commands.LCRTestCommand;
 import org.eu.hanana.reimu.mc.lcr.events.LegacyCommandRegistrationEvent;
 import org.eu.hanana.reimu.mc.lcr.network.*;
@@ -24,6 +25,7 @@ public final class LCRMod {
             @Override
             public void register(CommandDispatcher<CommandSourceStack> commandDispatcher, CommandBuildContext commandBuildContext, Commands.CommandSelection commandSelection) {
                 new CommandManager().init();
+                LCRProxyCommand.register(commandDispatcher);
             }
         });
         LegacyCommandRegistrationEvent.EVENT.register(new LegacyCommandRegistrationEvent() {
