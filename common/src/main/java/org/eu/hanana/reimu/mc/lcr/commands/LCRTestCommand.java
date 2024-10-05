@@ -3,9 +3,15 @@ package org.eu.hanana.reimu.mc.lcr.commands;
 import dev.architectury.utils.GameInstance;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.item.ItemInput;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
 import org.eu.hanana.reimu.mc.lcr.command.CommandBase;
+
+import java.util.List;
 
 public class LCRTestCommand extends CommandBase {
     @Override
@@ -32,6 +38,26 @@ public class LCRTestCommand extends CommandBase {
                 GameInstance.getServer().getCommands().performPrefixedCommand(commandSourceStack,args[2]);
             }else if (args[1].equals("return")){
                 return Integer.parseInt(args[2]);
+            }else if (args[1].equals("selector")){
+                List<? extends Entity> entityBySelector = this.getEntityBySelector(args[2], commandSourceStack);
+                for (Entity entity : entityBySelector) {
+                    commandSourceStack.sendSuccess(entity::getName,true);
+                }
+                return entityBySelector.size();
+            }else if (args[1].equals("item")){
+                ItemInput itemInputBySelector = getItemInputBySelector(args[2]);
+                commandSourceStack.sendSuccess(()-> Component.literal(itemInputBySelector.getItem().toString()),true);
+                return 0;
+            } else if (args[1].equals("block_pos_1_arg")){
+                BlockPos blockPos = getBlockPos(args[2], commandSourceStack);
+                BlockState blockState = commandSourceStack.getLevel().getBlockState(blockPos);
+                commandSourceStack.sendSystemMessage(Component.literal(blockState.toString()));
+                return 0;
+            } else if (args[1].equals("block_pos_3_arg")){
+                BlockPos blockPos =  getBlockPos(toVec3Str(args[2],args[3],args[4]), commandSourceStack);
+                BlockState blockState = commandSourceStack.getLevel().getBlockState(blockPos);
+                commandSourceStack.sendSystemMessage(Component.literal(blockState.toString()));
+                return 0;
             }
         }else {
             throw new Exception("Incomplete command!");
@@ -46,7 +72,12 @@ public class LCRTestCommand extends CommandBase {
             return string+" ";
         }
         if (args.length==2){
-            return cycleTabSuggestion(player,args,new String[]{"fail","success","execute","return"},true);
+            return cycleTabSuggestion(player,args,new String[]{"fail","success","execute","return","selector","item","block_pos_1_arg","block_pos_3_arg"},true);
+        }
+        if (args.length==3){
+            if (args[1].equals("item")){
+                return cycleTabSuggestion(player,args,getAllItems(),true);
+            }
         }
         return super.getSuggestion(string, player);
     }

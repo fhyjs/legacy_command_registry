@@ -24,7 +24,7 @@ public final class LCRMod {
         CommandRegistrationEvent.EVENT.register(new CommandRegistrationEvent() {
             @Override
             public void register(CommandDispatcher<CommandSourceStack> commandDispatcher, CommandBuildContext commandBuildContext, Commands.CommandSelection commandSelection) {
-                new CommandManager().init();
+                new CommandManager(commandBuildContext).init();
                 LCRProxyCommand.register(commandDispatcher);
             }
         });

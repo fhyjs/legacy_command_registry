@@ -1,13 +1,32 @@
 package org.eu.hanana.reimu.mc.lcr.command;
 
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.commands.arguments.coordinates.Vec2Argument;
+import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.commands.arguments.item.ItemInput;
+import net.minecraft.commands.arguments.selector.EntitySelectorParser;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
+import org.eu.hanana.reimu.mc.lcr.CommandManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class CommandBase {
     public abstract int getPermissionLevel();
@@ -80,5 +99,52 @@ public abstract class CommandBase {
         }
         stringBuilder.deleteCharAt(stringBuilder.length()-1);
         return stringBuilder.toString();
+    }
+    public String[] getAllItems(){
+        final List<String> listName = new ArrayList<>();
+        HolderLookup.RegistryLookup<Item> itemRegistryLookup = CommandManager.getCommandManager().getCommandBuildContext().lookup(BuiltInRegistries.ITEM.key()).get();
+        List<Holder.Reference<Item>> list = itemRegistryLookup.listElements().toList();
+        for (Holder.Reference<Item> itemReference : list) {
+            listName.add(itemReference.getRegisteredName());
+        }
+        return listName.toArray(new String[0]);
+    }
+    public List<? extends Entity> getEntityBySelector(String selector,CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return new EntitySelectorParser(new StringReader(selector)).parse().findEntities(commandSourceStack);
+    }
+    public Entity getSingleEntityBySelector(String selector,CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return new EntitySelectorParser(new StringReader(selector)).parse().findSingleEntity(commandSourceStack);
+    }
+    public ServerPlayer getSinglePlayerBySelector(String selector, CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return new EntitySelectorParser(new StringReader(selector)).parse().findSinglePlayer(commandSourceStack);
+    }
+    public List<ServerPlayer> getPlayerBySelector(String selector, CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return new EntitySelectorParser(new StringReader(selector)).parse().findPlayers(commandSourceStack);
+    }
+    public ItemInput getItemInputBySelector(String selector) throws CommandSyntaxException {
+        return new ItemArgument(CommandManager.getCommandManager().getCommandBuildContext()).parse(new StringReader(selector));
+    }
+    public BlockPos getBlockPos(String pos,CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return BlockPosArgument.blockPos().parse(new StringReader(pos)).getBlockPos(commandSourceStack);
+    }
+    public Vec3 getVec3(String pos, CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return Vec3Argument.vec3().parse(new StringReader(pos)).getPosition(commandSourceStack);
+    }
+    public Vec2 getVec2(String pos, CommandSourceStack commandSourceStack) throws CommandSyntaxException {
+        return Vec2Argument.vec2().parse(new StringReader(pos)).getRotation(commandSourceStack);
+    }
+    public String toVec3Str(String x,String y,String z){
+        return to1Arg(x,y,z);
+    }
+    public String toVec2Str(String a,String b){
+        return to1Arg(a,b);
+    }
+    public String to1Arg(String... str){
+        var sb = new StringBuilder();
+        for (String s : str) {
+            sb.append(s).append(" ");
+        }
+        sb.deleteCharAt(sb.length()-1);
+        return sb.toString();
     }
 }

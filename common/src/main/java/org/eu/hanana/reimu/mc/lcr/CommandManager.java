@@ -1,21 +1,15 @@
 package org.eu.hanana.reimu.mc.lcr;
 
 import com.mojang.brigadier.LiteralMessage;
-import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.context.ContextChain;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
-import net.minecraft.commands.CommandResultCallback;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.ExecutionCommandSource;
 import net.minecraft.commands.execution.ChainModifiers;
-import net.minecraft.commands.execution.ExecutionContext;
 import net.minecraft.commands.execution.TraceCallbacks;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -28,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import static net.minecraft.commands.Commands.executeCommandInContext;
 
@@ -36,8 +29,11 @@ public class CommandManager {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static CommandManager commandManager;
     private final List<CommandBase> commands = new ArrayList<>();
-    public CommandManager(){
+    private final CommandBuildContext commandBuildContext;
+
+    public CommandManager(CommandBuildContext commandBuildContext){
         commandManager=this;
+        this.commandBuildContext=commandBuildContext;
     }
     @Nullable
     public static CommandManager getCommandManager() {
@@ -137,5 +133,13 @@ public class CommandManager {
                 commandSourceStack.getServer().getProfiler().pop();
             }
         }
+    }
+
+    public List<CommandBase> getCommands() {
+        return commands;
+    }
+
+    public CommandBuildContext getCommandBuildContext() {
+        return commandBuildContext;
     }
 }
