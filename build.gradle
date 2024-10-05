@@ -1,4 +1,5 @@
 plugins {
+    id 'maven-publish'
     id 'dev.architectury.loom' version '1.7.413' apply false
     id 'architectury-plugin' version '3.4.159'
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
@@ -38,7 +39,6 @@ subprojects {
     loom {
 
     }
-
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
         //mappings loom.officialMojangMappings()
@@ -78,6 +78,15 @@ subprojects {
             // Notice: This block does NOT have the same function as the block in the top level.
             // The repositories here will be used for publishing your artifact, not for
             // retrieving dependencies.
+            repositories {
+                maven {
+                    url 'https://repsy.io/mvn/fhyjs/legacy_command_registry'
+                    credentials {
+                        username repsyUsername
+                        password repsyPassword
+                    }
+                }
+            }
         }
     }
 }
