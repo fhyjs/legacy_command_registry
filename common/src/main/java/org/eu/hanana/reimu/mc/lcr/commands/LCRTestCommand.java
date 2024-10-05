@@ -77,6 +77,8 @@ public class LCRTestCommand extends CommandBase {
         if (args.length==3){
             if (args[1].equals("item")){
                 return cycleTabSuggestion(player,args,getAllItems(),true);
+            } else if (args[1].equals("selector")){
+                return cycleTabSuggestion(player,args,selectorSuggestions(),true);
             }
         }
         return super.getSuggestion(string, player);

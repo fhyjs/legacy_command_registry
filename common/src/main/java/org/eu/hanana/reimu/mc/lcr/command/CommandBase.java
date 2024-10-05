@@ -2,6 +2,7 @@ package org.eu.hanana.reimu.mc.lcr.command;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.architectury.utils.GameInstance;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.commands.arguments.coordinates.Vec2Argument;
@@ -146,5 +147,12 @@ public abstract class CommandBase {
         }
         sb.deleteCharAt(sb.length()-1);
         return sb.toString();
+    }
+    public String[] selectorSuggestions(){
+        var list = new ArrayList<>(List.of(new String[]{"@e", "@a", "@s", "@p", "@r"}));
+        for (ServerPlayer player : GameInstance.getServer().getPlayerList().getPlayers()) {
+            list.add(player.getScoreboardName());
+        }
+        return list.toArray(new String[0]);
     }
 }
